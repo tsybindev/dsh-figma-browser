@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Figma browser",
+    "description": "Read Figma files as exact design data and renders through the user's own signed-in Chrome, without a Figma API token, a paid seat, or Dev Mode.",
+    "detail": "docs/DETAIL.md"
+  }
+}

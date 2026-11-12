@@ -1,0 +1,16 @@
+# dsh-figma-browser bundle patch: one Host-only plugin row.
+#
+# The row is inserted as the bundle layer; per-machine settings (port, paths,
+# headless, allowEval) belong in the profile patch layer, which is applied after
+# every bundle layer and survives plugin updates:
+#
+#   ~/.dsh/profiles/<name>/cordis.patch.yml
+#
+#   - override:
+#       - id: figma-browser
+#         config:
+#           headless: false
+- insert:
+    - id: figma-browser
+      name: dsh-figma-browser
+      config: {}

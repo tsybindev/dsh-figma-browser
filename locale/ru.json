@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Figma в браузере",
+    "description": "Читает макеты Figma точными данными и рендерами через собственный Chrome пользователя с авторизацией — без API-токена Figma, подписки и Dev Mode.",
+    "detail": "docs/DETAIL.md"
+  }
+}
