@@ -61,7 +61,7 @@ figma_view    { "nodeId": "25:261" }
 - `window.figma` is an internal Figma interface, not a published API. If Figma removes it, only canvas screenshots and panel reading remain.
 - The copy is seeded once. When the Figma session expires, delete `profileDir` and start again while Chrome is closed.
 - One profile copy per machine; concurrent sessions share it through the same port.
-- Next.js/Figma canvas state is not restored from the conversation: reopen the file after a restart.
+- Editor state is not restored from the conversation: after a restart, reopen the file with figma_browser.
 
 ## Security
 
