@@ -1,7 +1,7 @@
 {
   "name": "dsh-figma-browser",
   "version": "0.1.0",
-  "description": "Figma design data for DeepSeek Harness through the user's own signed-in Chrome: node properties and exact renders without a Figma API token, paid seat, or Dev Mode.",
+  "description": "Figma design data and true renders for DeepSeek Harness, read through the user's own signed-in Chrome without a Figma API token, paid seat, or Dev Mode.",
   "type": "module",
   "main": "./src/index.js",
   "exports": {
@@ -13,13 +13,14 @@
   "files": [
     "src",
     "locale",
-    "docs",
     "cordis.patch.yml",
     "README.md",
+    "README.en.md",
     "LICENSE",
     "icon.svg"
   ],
   "license": "MIT",
+  "author": "Ligh7Fun",
   "engines": {
     "node": ">=22.0.0"
   },
@@ -38,15 +39,19 @@
     "figma-plugin-api",
     "cdp",
     "chrome-devtools-protocol",
-    "design"
+    "design",
+    "design-to-code"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR-ACCOUNT/dsh-figma-browser.git"
+    "url": "git+https://github.com/tsybindev/dsh-figma-browser.git"
+  },
+  "homepage": "https://github.com/tsybindev/dsh-figma-browser#readme",
+  "bugs": {
+    "url": "https://github.com/tsybindev/dsh-figma-browser/issues"
   },
   "scripts": {
     "check": "node --check src/index.js && node --check src/cdp.js && node --check src/browser.js && node --check src/figma.js",
-    "test": "node test/smoke.mjs",
-    "pack": "npm pack --dry-run"
+    "test": "node test/smoke.mjs"
   }
 }

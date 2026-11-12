@@ -1,7 +1,6 @@
 {
   "meta": {
     "title": "Figma browser",
-    "description": "Read Figma files as exact design data and renders through the user's own signed-in Chrome, without a Figma API token, a paid seat, or Dev Mode.",
-    "detail": "docs/DETAIL.md"
+    "description": "Read Figma files as exact design data and renders through the user's own signed-in Chrome, without a Figma API token, a paid seat, or Dev Mode. Open the file with figma_browser, find layers with figma_list, read them with figma_node, and show the editor with figma_view."
   }
 }

@@ -1,71 +1,80 @@
 # dsh-figma-browser
 
-A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) plugin that gives the agent your Figma designs as **exact data and true renders**, using your own logged-in Chrome — no Figma API token, no paid seat, no Dev Mode.
+**Русский** | [English](README.en.md)
+
+[![ci](https://github.com/tsybindev/dsh-figma-browser/actions/workflows/ci.yml/badge.svg)](https://github.com/tsybindev/dsh-figma-browser/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+Плагин для [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), который отдаёт агенту макеты Figma **точными данными и настоящими рендерами** через твой собственный Chrome с уже открытой сессией. Без токена Figma, без платного места, без Dev Mode и без API-лимитов.
 
 ```
 figma_node { "nodeId": "25:148", "render": true, "scale": 2 }
-→ PNG of the frame, exported by Figma itself
-→ Inter Bold 19.51px, fill #33435E, radius 12, auto layout 16/24/4, …
+→ PNG кадра, экспортированный самой Figma
+→ Inter Bold 19.51px, заливка #33435E, радиус 12, автолейаут 16/24/4, …
 ```
 
-## Why it works
+## Зачем
 
-The Figma **web editor** keeps the real plugin API reachable inside the page as `window.figma` — `getNodeById`, `root`, `currentPage`, `exportAsync`, `variables`. The plugin starts Chrome on a copy of your profile (so your session is already signed in), attaches over the Chrome DevTools Protocol, and reads the document through that API.
+Публичный Figma REST API упирается в токен и тариф, Figma MCP — в OAuth, allowlist клиентов и десктопное приложение, Dev Mode — в платное место. При этом веб-редактор Figma держит внутри страницы **настоящий plugin API** — `window.figma` с `getNodeById`, `root`, `currentPage`, `exportAsync`, `variables`. Плагин открывает файл в Chrome под твоей сессией, подключается к вкладке по Chrome DevTools Protocol и читает документ через этот API. Поэтому работает и на бесплатном тарифе.
 
-No Playwright, no Puppeteer, no downloaded browsers: CDP runs over the platform `WebSocket`.
+## Как это работает
 
-Two constraints are handled for you:
+1. Chrome запускается с `--remote-debugging-port` на **копии** профиля (`Local State`, `Cookies`, `Local Storage`, `IndexedDB`, …). С Chrome 136 отладочные ключи игнорируются на дефолтном каталоге данных, поэтому копия — единственный способ сохранить куки и авторизацию.
+2. Headless-запуск подставляет обычный Chrome User-Agent: CDN Figma отвечает `403 Request blocked` на токен `HeadlessChrome`.
+3. Плагин подключается к вкладке редактора по CDP (встроенный `WebSocket` платформы) и выполняет небольшой сериализатор против `window.figma`.
+4. Рендеры отдаёт `node.exportAsync`, то есть картинку рисует сама Figma.
 
-- Chrome 136+ ignores `--remote-debugging-port` on the default data directory, so the profile is copied once and Chrome runs on that copy.
-- Figma's CDN answers `403 Request blocked` to the `HeadlessChrome` User-Agent, so headless launches send an ordinary Chrome UA.
+Никаких рантайм-зависимостей: без Playwright, без Puppeteer, без скачивания браузеров.
 
-## Install
+## Установка
 
 ```bash
-# from npm
+# из npm
 dsh plugin add dsh-figma-browser
 
-# or from a local checkout
+# из локального клона
 dsh plugin add /path/to/dsh-figma-browser
 ```
 
-In the Web GUI: **Plugins → Add plugin** → the package name or a local directory. The bundle is Host-only, so no build step and no extra services are involved.
+В веб-интерфейсе: **Plugins → Add plugin** → имя пакета или путь к каталогу. Бандл host-only: сборка не нужна.
 
-Then start a new session and ask the agent to open a Figma file:
+Дальше в новой сессии:
 
 ```
 figma_browser { "action": "open", "url": "https://www.figma.com/design/<file>?node-id=25-147" }
 ```
 
-## Tools
+## Инструменты
 
-| Tool | Parameters | Result |
+| Инструмент | Параметры | Результат |
 |---|---|---|
-| `figma_browser` | `action: status \| start \| stop \| open`, `url` | browser state, or the opened tab |
-| `figma_list` | `action: pages \| search \| selection`, `query`, `limit` | page ids, matching nodes, current selection |
-| `figma_node` | `nodeId`, `depth`, `render`, `format`, `scale` | geometry, fills, gradients, effects, auto layout, text and font, children; optional PNG/SVG |
-| `figma_view` | `nodeId?`, `format?` | screenshot of the editor, with the node selected first |
-| `figma_eval` | `expression` | only with `allowEval: true` |
+| `figma_browser` | `action: status \| start \| stop \| open`, `url` | состояние браузера или открытая вкладка |
+| `figma_list` | `action: pages \| search \| selection`, `query`, `limit` | страницы файла, найденные узлы, текущее выделение |
+| `figma_node` | `nodeId`, `depth`, `render`, `format`, `scale` | геометрия, заливки, градиенты, эффекты, автолейаут, текст и шрифт, дети; опционально PNG/SVG |
+| `figma_view` | `nodeId?`, `format?` | скриншот редактора, при необходимости с выделенным узлом |
+| `figma_eval` | `expression` | только при `allowEval: true` |
 
-`nodeId` accepts `25:147`, `25-147`, or a full Figma link; a link also opens that file first.
+`nodeId` принимает `25:147`, `25-147` или полную ссылку Figma; ссылка ещё и откроет нужный файл.
 
-## Configuration
+## Настройка
 
-| Field | Default | Meaning |
+| Поле | По умолчанию | Значение |
 |---|---|---|
-| `port` | `9333` | DevTools port; bound to `127.0.0.1` only |
-| `headless` | `false` | Set `true` to hide the window, for servers and CI |
-| `autoStart` | `true` | Start Chrome when a Figma tool runs and none is up |
-| `allowEval` | `false` | Register `figma_eval` (arbitrary page JavaScript) |
-| `chromePath` | auto-detect | Chrome/Chromium executable |
-| `sourceProfile` | auto-detect | Real Chrome user-data directory copied once |
-| `profileDir` | `~/.dsh/figma-browser/profile` | Where the copy lives |
-| `outputDir` | `~/.dsh/figma-browser/out` | Where JSON and renders are written |
-| `userAgent` | auto-detect | Headless User-Agent override |
-| `startupTimeoutMs` | `20000` | Browser start budget |
-| `extraArgs` | `[]` | Extra Chrome switches, e.g. `--no-sandbox` in a container |
+| `port` | `9333` | порт DevTools, слушается только `127.0.0.1` |
+| `headless` | `false` | запуск без окна; в headless не видно действий агента |
+| `autoStart` | `true` | поднимать браузер самому, если его нет |
+| `allowEval` | `false` | регистрировать `figma_eval` (произвольный JS в странице) |
+| `chromePath` | автоопределение | путь к Chrome/Chromium |
+| `sourceProfile` | автоопределение | каталог реального профиля, копируемый один раз |
+| `profileDir` | `~/.dsh/figma-browser/profile` | где живёт копия профиля |
+| `outputDir` | `~/.dsh/figma-browser/out` | куда пишутся JSON и рендеры |
+| `userAgent` | автоопределение | User-Agent для headless |
+| `startupTimeoutMs` | `20000` | сколько ждать запуска браузера |
+| `extraArgs` | `[]` | дополнительные ключи Chrome, например `--no-sandbox` в контейнере |
 
-Per-machine configuration goes into the profile patch layer, which survives plugin updates:
+Если окно не нужно, поставь `headless: true`; если у машины нет дисплея, плагин сам откатится на headless.
+
+Локальные настройки живут в профильном патче и переживают обновление плагина:
 
 ```yaml
 # ~/.dsh/profiles/<name>/cordis.patch.yml
@@ -76,37 +85,37 @@ Per-machine configuration goes into the profile patch layer, which survives plug
         allowEval: true
 ```
 
-macOS and Windows are supported by the same code (executable and profile paths are detected per platform).
-
-## Limitations
-
-- Figma only, and the browser copy is dedicated to this plugin rather than your live Chrome window.
-- `window.figma` is an internal Figma interface. If Figma removes it, only canvas screenshots remain.
-- The copy is seeded once. When the session expires, delete `profileDir`, close Chrome, and start again.
-- Every session on the machine shares the one browser instance and port.
-- Read-only by design: the plugin never writes to your file unless you ask the agent to, and `figma_eval` is off by default.
-
-## Security
-
-- The copied profile holds your cookies. Do not commit or share it.
-- While the port is open, any local process can drive that browser. Stop it when you are done: `figma_browser { "action": "stop" }`.
-- Prefer a dedicated Chrome profile if you do not want other sites' cookies copied.
-
-## Development
+## Проверка
 
 ```bash
-npm run check   # syntax check every module
-npm test        # smoke test against a browser already listening on :9333
+npm run check   # синтаксис всех модулей
+npm test        # smoke-тест против браузера, слушающего :9333
 ```
 
-Layout: `src/cdp.js` (CDP client), `src/browser.js` (Chrome lifecycle and profile copy), `src/figma.js` (in-page Figma operations), `src/index.js` (tool registration).
+## Ограничения
 
-## По-русски
+- Только Figma; копия профиля выделена под плагин, это не твоё живое окно Chrome.
+- `window.figma` — внутренний механизм Figma, а не публичный API. Если его уберут, останутся скриншоты канваса.
+- Копия делается один раз. Когда сессия истечёт, удали `profileDir` при закрытом Chrome и запусти заново.
+- Все сессии на машине делят один экземпляр браузера и один порт.
+- Плагин ничего не меняет в файле сам: запись возможна только если агент прямо попросят, а `figma_eval` по умолчанию выключен.
 
-Плагин даёт агенту доступ к макетам Figma через твой собственный Chrome: он поднимает отдельный Chrome на копии твоего профиля (там уже есть авторизация), подключается по CDP и читает документ через `window.figma` — то есть отдаёт точные размеры, отступы, цвета, градиенты, шрифты и настоящий рендер. Токен Figma, подписка и Dev Mode не нужны.
+## Безопасность
 
-Установка: `dsh plugin add dsh-figma-browser`, затем в новой сессии `figma_browser` → `open` со ссылкой на файл, дальше `figma_list` / `figma_node` / `figma_view`. По умолчанию окно Chrome видимое, чтобы было видно, что делает агент; для сервера поставь `headless: true`.
+- В копии профиля лежат твои куки. Не коммить её и не выкладывай.
+- Пока порт открыт, любой локальный процесс может управлять этим браузером. Закончил — `figma_browser { "action": "stop" }`.
+- Если не хочешь копировать куки всех сайтов, сделай отдельный профиль Chrome для Figma.
 
-## License
+## Структура
+
+```
+src/cdp.js      CDP-клиент на встроенном WebSocket
+src/browser.js  жизненный цикл Chrome, копия профиля
+src/figma.js    операции внутри редактора (window.figma)
+src/index.js    регистрация инструментов
+test/smoke.mjs  smoke-тест против живого браузера
+```
+
+## Лицензия
 
 MIT

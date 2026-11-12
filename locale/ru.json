@@ -1,7 +1,6 @@
 {
   "meta": {
     "title": "Figma в браузере",
-    "description": "Читает макеты Figma точными данными и рендерами через собственный Chrome пользователя с авторизацией — без API-токена Figma, подписки и Dev Mode.",
-    "detail": "docs/DETAIL.md"
+    "description": "Читает макеты Figma точными данными и рендерами через собственный Chrome пользователя с авторизацией — без API-токена Figma, подписки и Dev Mode. Открой файл через figma_browser, найди слои через figma_list, прочитай их через figma_node и покажи редактор через figma_view."
   }
 }
